@@ -1,4 +1,4 @@
-package com.study.cache.config;
+package com.study.cache.config.init;
 
 import com.study.cache.entity.PostEntity;
 import com.study.cache.repository.PostRepository;

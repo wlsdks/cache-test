@@ -21,7 +21,13 @@ public class PostDto {
 
     // factory method
     public static PostDto from(PostEntity postEntity) {
-        return new PostDto(postEntity.getId(), postEntity.getTitle(), postEntity.getContent(), postEntity.getAuthor(), postEntity.getCreatedAt());
+        return new PostDto(
+                postEntity.getId(),
+                postEntity.getTitle(),
+                postEntity.getContent(),
+                postEntity.getAuthor(),
+                postEntity.getCreatedAt()
+        );
     }
 
 }

@@ -1,4 +1,4 @@
-package com.study.cache.service.impl;
+package com.study.cache.service.impl.post;
 
 import com.study.cache.dto.PostDto;
 import com.study.cache.repository.PostRepository;

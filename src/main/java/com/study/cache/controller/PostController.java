@@ -1,9 +1,9 @@
 package com.study.cache.controller;
 
 import com.study.cache.dto.PostDto;
-import com.study.cache.service.impl.BasicPostService;
-import com.study.cache.service.impl.LocalCachePostService;
-import com.study.cache.service.impl.RedisPostService;
+import com.study.cache.service.impl.post.BasicPostService;
+import com.study.cache.service.impl.post.LocalCachePostService;
+import com.study.cache.service.impl.post.RedisPostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;

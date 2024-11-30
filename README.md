@@ -32,39 +32,40 @@ hey -n 3000 -c 50 "http://localhost:8100/api/posts/local?page=0&size=20"
 일반 조회 (캐시 없음)
 ```bash
 Summary:
-Total:	3.3505 secs
-Slowest:	0.3340 secs
-Fastest:	0.0046 secs
-Average:	0.0548 secs
-Requests/sec:	895.3772
+  Total:	1.8430 secs
+  Slowest:	0.1985 secs
+  Fastest:	0.0012 secs
+  Average:	0.0296 secs
+  Requests/sec:	1627.7493
 
-Status
-[200]	3000 responses
+Status code distribution:
+  [200]	3000 responses
 ```
 
 Redis 캐시 조회
 ```bash
 Summary:
-Total:	2.6371 secs
-Slowest:	0.3268 secs
-Fastest:	0.0284 secs
-Average:	0.0436 secs
-Requests/sec:	1137.5926
+  Total:	0.4459 secs
+  Slowest:	0.2485 secs
+  Fastest:	0.0005 secs
+  Average:	0.0074 secs
+  Requests/sec:	6727.8615
 
-Status
-[200]	3000 responses
+Status code distribution:
+  [200]	3000 responses
 ```
+
 로컬 캐시 조회 (Caffeine)
 ```bash
 Summary:
-Total:	0.6202 secs
-Slowest:	0.1816 secs
-Fastest:	0.0012 secs
-Average:	0.0090 secs
-Requests/sec:	4837.0970
+  Total:	0.1145 secs
+  Slowest:	0.0584 secs
+  Fastest:	0.0002 secs
+  Average:	0.0017 secs
+  Requests/sec:	26196.7169
 
-Status
-[200]	3000 responses
+Status code distribution:
+  [200]	3000 responses
 ````
 
 ## 2. 대용량 + 복잡한 쿼리 데이터 처리 테스트 (hey 사용)
@@ -153,22 +154,31 @@ Status code distribution:
 성능 비교 요약
 - 테스트 결과를 종합해보면, 로컬 캐시(Caffeine), Redis 캐시, 그리고 캐시 미사용 순으로 성능이 우수한 것으로 나타났습니다.
 
-1. 로컬 캐시 (Caffeine):
-- 작은 데이터 (1KB): 평균 응답 시간 약 9.0ms, 초당 처리량 약 4,837 req/s 
-- 대용량 데이터 (1MB): 평균 응답 시간 약 1.5ms, 초당 처리량 약 32,046 req/s 
-- 장점: 응답 시간이 가장 빠르고, 높은 요청 처리 속도를 보임.
+로컬 캐시 (Caffeine)
+- 작은 데이터 (1KB):
+  - 평균 응답 시간: 약 1.7ms 
+  - 초당 처리량: 약 26,196 req/s
+- 대용량 데이터 (1MB):
+  - 평균 응답 시간: 약 1.5ms
+  - 초당 처리량: 약 32,046 req/s
+  - 장점: 응답 시간이 가장 빠르고, 높은 요청 처리 속도를 보임.
+ 
+ 
+Redis 캐시
+- 작은 데이터 (1KB):
+  - 평균 응답 시간: 약 7.4ms
+  - 초당 처리량: 약 6,728 req/s
 
-2. Redis 캐시:
-- 작은 데이터 (1KB): 평균 응답 시간 약 43.6ms, 초당 처리량 약 1,138 req/s 
-- 대용량 데이터 (1MB): 평균 응답 시간 약 3.9ms, 초당 처리량 약 12,602 req/s 
-- 장점: 캐시를 통해 데이터베이스 접근을 최소화하여 응답 시간을 단축시키고, 높은 처리량을 유지함.
+- 대용량 데이터 (1MB):
+  - 평균 응답 시간: 약 3.9ms
+  - 초당 처리량: 약 12,602 req/s
+  - 장점: 페이징 처리(Pageable 사용) 덕분에 캐시 적중률이 크게 향상되어, 데이터베이스 접근을 최소화하고 응답 시간을 단축시키며, 높은 처리량을 유지함.
 
-3. 캐시 미사용:
-- 작은 데이터 (1KB): 평균 응답 시간 약 54.8ms, 초당 처리량 약 895 req/s 
-- 대용량 데이터 (1MB): 평균 응답 시간 약 594.2ms, 초당 처리량 약 83 req/s 
-- 단점: 데이터베이스 부하가 높아지고, 응답 시간이 길어지며, 요청 처리 속도가 현저히 저하됨.
-
-성능 향상 분석 
-- 로컬 캐시 (Caffeine)의 우수한 성능은 애플리케이션 메모리 내에서 직접 데이터를 조회하기 때문에 네트워크 지연이나 직렬화/역직렬화 오버헤드가 최소화됩니다. 이는 특히 단일 서버 환경에서 매우 효과적입니다.
-- Redis 캐시는 네트워크를 통한 데이터 접근이 필요하지만, 여전히 캐시 미사용보다 월등히 빠른 응답 시간과 높은 처리량을 제공합니다. Redis는 분산 환경에서의 데이터 공유와 확장성 측면에서 강점을 가지지만, 단일 인스턴스 환경에서는 로컬 캐시에 비해 다소 낮은 성능을 보일 수 있습니다.
-- 캐시 미사용 시 데이터베이스에 직접 접근해야 하므로, 데이터베이스 부하가 증가하고 응답 시간이 길어지며, 전반적인 시스템 성능이 저하됩니다.
+캐시 미사용
+- 작은 데이터 (1KB):
+  - 평균 응답 시간: 약 29.6ms
+  - 초당 처리량: 약 1,628 req/s 
+- 대용량 데이터 (1MB):
+  - 평균 응답 시간: 약 594.2ms
+  - 초당 처리량: 약 83 req/s
+  - 단점: 데이터베이스 부하가 높아지고, 응답 시간이 길어지며, 요청 처리 속도가 현저히 저하됨.

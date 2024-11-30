@@ -1,6 +1,7 @@
 package com.study.cache.config.cache;
 
 import com.study.cache.dto.PostDto;
+import com.study.cache.dto.ProductReviewDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
@@ -69,6 +70,28 @@ public class RedisConfig {
     @Bean
     public RedisTemplate<String, List<PostDto>> redisTemplate(RedisConnectionFactory connectionFactory) {
         RedisTemplate<String, List<PostDto>> template = new RedisTemplate<>();
+        template.setConnectionFactory(connectionFactory);
+
+        // Key Serializer
+        template.setKeySerializer(new StringRedisSerializer());
+
+        // Value Serializer using GenericJackson2JsonRedisSerializer
+        GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer();
+        template.setValueSerializer(serializer);
+
+        template.afterPropertiesSet();
+        return template;
+    }
+
+
+    /**
+     * @param connectionFactory - Redis 연결 Factory
+     * @return RedisTemplate
+     * @apiNote RedisTemplate 설정
+     */
+    @Bean
+    public RedisTemplate<String, List<ProductReviewDto>> reviewRedisTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, List<ProductReviewDto>> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
 
         // Key Serializer

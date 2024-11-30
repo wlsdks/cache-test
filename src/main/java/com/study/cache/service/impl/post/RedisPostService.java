@@ -7,6 +7,8 @@ import com.study.cache.service.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,10 +24,10 @@ public class RedisPostService implements PostService {
     @Cacheable(value = "posts", key = "'page_' + #page + '_size_' + #size", cacheManager = "redisCacheManager")
     @Override
     public List<PostDto> getPosts(int page, int size) {
-        int offset = page * size;
-        List<PostEntity> posts = postRepository.findAllByOffsetAndLimit(offset, size);
+        PageRequest pageRequest = PageRequest.of(page, size);
+        Page<PostEntity> posts = postRepository.findAllByOffsetAndLimit(pageRequest);
 
-        return posts.stream()
+        return posts.getContent().stream()
                 .map(PostDto::from)
                 .collect(Collectors.toList());
     }

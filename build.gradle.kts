@@ -33,6 +33,9 @@ dependencies {
 	// PostgreSQL
 	runtimeOnly("org.postgresql:postgresql")
 
+	// MySQL
+	runtimeOnly("com.mysql:mysql-connector-j")
+
 	// Redis
 	implementation("org.springframework.boot:spring-boot-starter-data-redis")
 

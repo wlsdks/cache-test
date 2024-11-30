@@ -1,0 +1,34 @@
+server:
+  port: 8100
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/cache?useSSL=false&serverTimezone=UTC&useUnicode=true&characterEncoding=utf8
+    username: root
+    password: 1234
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
+  # 레디스 설정
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: redis
+      # Lettuce 설정
+      lettuce:
+        pool:
+          max-active: 32  # 동시 연결 수 증가
+          max-idle: 32
+          min-idle: 8

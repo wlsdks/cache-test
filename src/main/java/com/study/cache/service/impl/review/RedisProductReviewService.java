@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.util.List;
@@ -21,6 +22,7 @@ public class RedisProductReviewService implements ProductReviewService {
     private final RedisTemplate<String, List<ProductReviewDto>> redisTemplate;
     private static final String CACHE_KEY = "product_reviews::all";
 
+    @Transactional(readOnly = true)
     @Override
     public List<ProductReviewDto> getReviews() {
         List<ProductReviewDto> cachedReviews = redisTemplate.opsForValue().get(CACHE_KEY);

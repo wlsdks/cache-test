@@ -7,6 +7,7 @@ import com.study.cache.service.ProductReviewService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,7 +18,8 @@ import java.util.stream.Collectors;
 public class BasicProductReviewService implements ProductReviewService {
     
     private final ProductReviewRepository reviewRepository;
-    
+
+    @Transactional(readOnly = true)
     @Override
     public List<ProductReviewDto> getReviews() {
         List<ProductReviewEntity> reviews = reviewRepository.findAll();

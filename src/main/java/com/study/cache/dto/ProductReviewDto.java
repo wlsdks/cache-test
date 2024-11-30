@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -26,20 +28,46 @@ public class ProductReviewDto {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-
     // factory method
-    public static ProductReviewDto from(ProductReviewEntity productReviewEntity) {
+    public static ProductReviewDto of(
+            Long id,
+            String productName,
+            String content,
+            List<String> imageUrls,
+            Integer rating,
+            String userName,
+            Set<String> tags,
+            String additionalInfo,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt
+    ) {
         return new ProductReviewDto(
-                productReviewEntity.getId(),
-                productReviewEntity.getProductName(),
-                productReviewEntity.getContent(),
-                productReviewEntity.getImageUrls(),
-                productReviewEntity.getRating(),
-                productReviewEntity.getUserName(),
-                productReviewEntity.getTags(),
-                productReviewEntity.getAdditionalInfo(),
-                productReviewEntity.getCreatedAt(),
-                productReviewEntity.getUpdatedAt()
+                id,
+                productName,
+                content,
+                imageUrls,
+                rating,
+                userName,
+                tags,
+                additionalInfo,
+                createdAt,
+                updatedAt
+        );
+    }
+
+    // factory method for entity to dto conversion
+    public static ProductReviewDto from(ProductReviewEntity entity) {
+        return of(
+                entity.getId(),
+                entity.getProductName(),
+                entity.getContent(),
+                new ArrayList<>(entity.getImageUrls()),  // 새로운 List로 복사
+                entity.getRating(),
+                entity.getUserName(),
+                new HashSet<>(entity.getTags()),         // 새로운 Set으로 복사
+                entity.getAdditionalInfo(),
+                entity.getCreatedAt(),
+                entity.getUpdatedAt()
         );
     }
 

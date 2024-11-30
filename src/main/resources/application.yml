@@ -1,0 +1,32 @@
+server:
+  port: 8100
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+spring:
+  # 데이터베이스 설정
+  datasource:
+    url: jdbc:postgresql://localhost:5432/cache
+    username: root
+    password: 1234
+    driver-class-name: org.postgresql.Driver
+  # 레디스 설정
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: redis
+  # JPA 설정
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        #        use_sql_comments: true
+        default_batch_fetch_size: 10
+  #        highlight_sql: true

@@ -24,33 +24,58 @@ public class ProductReviewEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String productName;
-
-    @Column(columnDefinition = "TEXT")  // VARCHAR 대신 TEXT 타입 사용
+    @Column(columnDefinition = "TEXT")
     private String content;
 
     @ElementCollection
-    @CollectionTable(name = "review_images")
+    @CollectionTable(name = "review_images", joinColumns = @JoinColumn(name = "review_id"))
     private List<String> imageUrls = new ArrayList<>();
 
     private Integer rating;
 
-    private String userName;
-
     @ElementCollection
-    @CollectionTable(name = "review_tags")
+    @CollectionTable(name = "review_tags", joinColumns = @JoinColumn(name = "review_id"))
     private Set<String> tags = new HashSet<>();
 
     @Column(columnDefinition = "TEXT")
-    private String additionalInfo;  // JSON 형태의 추가 정보 저장
+    private String additionalInfo;
 
     @CreatedDate
     private LocalDateTime createdAt;
+
     private LocalDateTime updatedAt;
 
-    // factory method
-    public static ProductReviewEntity of(String productName, String content, List<String> imageUrls, Integer rating, String userName, Set<String> tags, String additionalInfo) {
-        return new ProductReviewEntity(null, productName, content, imageUrls, rating, userName, tags, additionalInfo, null, null);
+    // New relationships
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id")
+    private ProductEntity product;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private UserEntity user;
+
+    // Factory method
+    public static ProductReviewEntity of(
+            String content,
+            List<String> imageUrls,
+            Integer rating,
+            Set<String> tags,
+            String additionalInfo,
+            ProductEntity product,
+            UserEntity user
+    ) {
+        return new ProductReviewEntity(
+                null,
+                content,
+                imageUrls,
+                rating,
+                tags,
+                additionalInfo,
+                null,
+                null,
+                product,
+                user
+        );
     }
 
 }

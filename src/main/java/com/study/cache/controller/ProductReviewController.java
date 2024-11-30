@@ -26,27 +26,30 @@ public class ProductReviewController {
     @GetMapping("/basic")
     public ResponseEntity<List<ProductReviewDto>> getReviewsWithoutCache(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "0") int minRating
     ) {
         return ResponseEntity.ok()
                 .cacheControl(CacheControl.noCache())
-                .body(basicReviewService.getReviews(page, size));
+                .body(basicReviewService.getReviews(page, size, minRating));
     }
 
     @GetMapping("/redis")
     public ResponseEntity<List<ProductReviewDto>> getReviewsWithRedisCache(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "0") int minRating
     ) {
-        return ResponseEntity.ok(redisReviewService.getReviews(page, size));
+        return ResponseEntity.ok(redisReviewService.getReviews(page, size, minRating));
     }
 
     @GetMapping("/local")
     public ResponseEntity<List<ProductReviewDto>> getReviewsWithLocalCache(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "0") int minRating
     ) {
-        return ResponseEntity.ok(localCacheReviewService.getReviews(page, size));
+        return ResponseEntity.ok(localCacheReviewService.getReviews(page, size, minRating));
     }
 
 }

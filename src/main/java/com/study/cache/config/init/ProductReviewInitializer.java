@@ -1,7 +1,7 @@
 package com.study.cache.config.init;
 
-import com.study.cache.entity.ProductReviewEntity;
-import com.study.cache.repository.ProductReviewRepository;
+import com.study.cache.entity.*;
+import com.study.cache.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
@@ -17,125 +17,133 @@ import java.util.*;
 public class ProductReviewInitializer implements ApplicationRunner {
 
     private final ProductReviewRepository reviewRepository;
+    private final ProductRepository productRepository;
+    private final UserRepository userRepository;
+    private final BrandRepository brandRepository;
+    private final CategoryRepository categoryRepository;
     private final Random random = new Random();
 
-    @Override
     @Transactional
+    @Override
     public void run(ApplicationArguments args) {
         log.info("ProductReviewInitializer 실행");
 
         long count = reviewRepository.count();
         log.info("현재 리뷰 수: {}", count);
 
-        if (reviewRepository.count() == 0) {
+        if (count == 0) {
+            // Create brands
+            List<BrandEntity> brands = new ArrayList<>();
+            for (int i = 1; i <= 30; i++) {
+                BrandEntity brand = BrandEntity.of("Brand_" + i, "Country_" + random.nextInt(50));
+                brands.add(brand);
+            }
+            brandRepository.saveAll(brands);
+
+            // Create categories
+            List<CategoryEntity> categories = new ArrayList<>();
+            for (int i = 1; i <= 50; i++) {
+                CategoryEntity category = CategoryEntity.of("Category_" + i, "Description of Category_" + i);
+                categories.add(category);
+            }
+            categoryRepository.saveAll(categories);
+
+            // Create users
+            List<UserEntity> users = new ArrayList<>();
+            for (int i = 1; i <= 100; i++) {
+                UserEntity user = UserEntity.of(
+                        "user_" + i,
+                        "user_" + i + "@example.com",
+                        "User FullName " + i
+                );
+                users.add(user);
+            }
+            userRepository.saveAll(users);
+
+            // Create products
+            List<ProductEntity> products = new ArrayList<>();
+            for (int i = 1; i <= 1000; i++) {
+                BrandEntity brand = brands.get(random.nextInt(brands.size()));
+
+                // Assign random categories to product
+                Set<CategoryEntity> productCategories = new HashSet<>();
+                int categoryCount = random.nextInt(3) + 1; // Each product has 1 to 3 categories
+                for (int j = 0; j < categoryCount; j++) {
+                    CategoryEntity category = categories.get(random.nextInt(categories.size()));
+                    productCategories.add(category);
+                }
+
+                ProductEntity product = ProductEntity.of(
+                        "Product_" + i,
+                        "Description for Product_" + i,
+                        brand,
+                        productCategories
+                );
+                products.add(product);
+            }
+            productRepository.saveAll(products);
+
+            // Create reviews
             List<ProductReviewEntity> reviews = new ArrayList<>();
 
-            for (int i = 1; i <= 1000; i++) {
-                // 이미지 URL 더 많이 생성 (5-15개)
+            for (int i = 1; i <= 10000; i++) {
+                // Get random product and user
+                ProductEntity product = products.get(random.nextInt(products.size()));
+                UserEntity user = users.get(random.nextInt(users.size()));
+
+                // Generate image URLs
                 List<String> imageUrls = new ArrayList<>();
-                for (int j = 0; j < random.nextInt(10) + 5; j++) {
-                    imageUrls.add("http://test-example.com/image" + random.nextInt(1000) +
-                            ".jpg?size=large&quality=high&timestamp=" + System.currentTimeMillis() +
-                            "&metadata=" + UUID.randomUUID());
+                for (int j = 0; j < random.nextInt(5) + 1; j++) {
+                    imageUrls.add("http://example.com/images/" + UUID.randomUUID() + ".jpg");
                 }
 
-                // 태그 더 많이 생성 (10-20개)
+                // Generate tags
                 Set<String> tags = new HashSet<>();
-                for (int j = 0; j < random.nextInt(10) + 10; j++) {
-                    tags.add("detailed_tag_" + random.nextInt(100) + "_category_" +
-                            random.nextInt(50) + "_type_" + random.nextInt(30));
+                for (int j = 0; j < random.nextInt(5) + 1; j++) {
+                    tags.add("tag_" + random.nextInt(100));
                 }
 
-                // 훨씬 더 큰 텍스트 생성 (약 100KB)
-                StringBuilder content = new StringBuilder();
-                content.append("제품 상세 리뷰 시작\n".repeat(10));
-                content.append("이 상품에 대한 상세한 리뷰입니다. ".repeat(200));
-                content.append("\n상품의 장점:\n".repeat(5));
-                content.append("이 상품의 주요 장점은 다음과 같습니다. ".repeat(100));
-                content.append("\n상품의 단점:\n".repeat(5));
-                content.append("개선이 필요한 부분은 다음과 같습니다. ".repeat(100));
-                content.append("\n사용 경험:\n".repeat(5));
-                content.append("실제 사용해본 경험을 공유합니다. ".repeat(100));
-                content.append("\n추천 이유:\n".repeat(5));
-                content.append("이 상품을 추천하는 이유는 다음과 같습니다. ".repeat(100));
-                content.append("\n리뷰 번호 " + i + "의 상세 사용 후기입니다.\n".repeat(10));
-                content.append("추가적인 상세 설명과 사용 팁입니다. ".repeat(200));
+                // Generate content
+                String content = "This is a detailed review for product " + product.getName() + ".\n"
+                        + "User experience and opinions are shared here.";
 
-                // 더 복잡한 JSON 형태의 추가 정보
+                // Additional info
                 String additionalInfo = String.format("""
                                 {
-                                    "reviewMetadata": {
-                                        "purchaseInfo": {
-                                            "date": "2024-%02d-%02d",
-                                            "store": "Branch_%d",
-                                            "paymentMethod": "Method_%d",
-                                            "deliveryType": "Type_%d"
-                                        },
-                                        "verificationData": {
-                                            "verified": %b,
-                                            "verificationDate": "2024-%02d-%02d",
-                                            "verificationMethod": "Method_%d",
-                                            "verificationDetails": "Detail_%d"
-                                        },
-                                        "interactionMetrics": {
-                                            "helpfulCount": %d,
-                                            "reportCount": %d,
-                                            "viewCount": %d,
-                                            "commentCount": %d,
-                                            "shareCount": %d
-                                        },
-                                        "detailedRatings": {
-                                            "quality": %d,
-                                            "price": %d,
-                                            "delivery": %d,
-                                            "packaging": %d,
-                                            "satisfaction": %d,
-                                            "durability": %d,
-                                            "designRating": %d,
-                                            "usability": %d,
-                                            "customerService": %d
-                                        },
-                                        "productUsageInfo": {
-                                            "usageDuration": %d,
-                                            "usageFrequency": "Frequency_%d",
-                                            "usageEnvironment": "Environment_%d",
-                                            "userExpertiseLevel": "Level_%d"
-                                        }
-                                    }
+                                    "purchaseDate": "%s",
+                                    "store": "Store_%d",
+                                    "verified": %b
                                 }
                                 """,
-                        random.nextInt(12) + 1, random.nextInt(28) + 1,
-                        random.nextInt(100), random.nextInt(10), random.nextInt(5),
-                        random.nextBoolean(), random.nextInt(12) + 1, random.nextInt(28) + 1,
-                        random.nextInt(5), random.nextInt(1000),
-                        random.nextInt(1000), random.nextInt(50),
-                        random.nextInt(10000), random.nextInt(500), random.nextInt(200),
-                        random.nextInt(5) + 1, random.nextInt(5) + 1, random.nextInt(5) + 1,
-                        random.nextInt(5) + 1, random.nextInt(5) + 1, random.nextInt(5) + 1,
-                        random.nextInt(5) + 1, random.nextInt(5) + 1, random.nextInt(5) + 1,
-                        random.nextInt(365) + 1, random.nextInt(10), random.nextInt(5),
-                        random.nextInt(5)
+                        "2024-" + (random.nextInt(12) + 1) + "-" + (random.nextInt(28) + 1),
+                        random.nextInt(100),
+                        random.nextBoolean()
                 );
 
                 ProductReviewEntity review = ProductReviewEntity.of(
-                        "상품_" + i + "_카테고리_" + random.nextInt(50) + "_브랜드_" + random.nextInt(30),
-                        content.toString(),
+                        content,
                         imageUrls,
                         random.nextInt(5) + 1,
-                        "상세리뷰어_" + UUID.randomUUID().toString(),
                         tags,
-                        additionalInfo
+                        additionalInfo,
+                        product,
+                        user
                 );
 
                 reviews.add(review);
 
-                if (i % 100 == 0) {
+                if (i % 1000 == 0) {
                     log.info("{}개의 리뷰 생성 중...", i);
+                    reviewRepository.saveAll(reviews);
+                    reviews.clear();
                 }
             }
+            // Save remaining reviews
+            if (!reviews.isEmpty()) {
+                reviewRepository.saveAll(reviews);
+            }
 
-            reviewRepository.saveAll(reviews);
-            log.info("리뷰 데이터 저장 완료");
+            log.info("데이터 초기화 완료");
         }
     }
 

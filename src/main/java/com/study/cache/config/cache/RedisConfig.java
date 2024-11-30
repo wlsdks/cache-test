@@ -1,9 +1,9 @@
 package com.study.cache.config.cache;
 
+import com.study.cache.config.KryoRedisSerializer;
 import com.study.cache.dto.PostDto;
 import com.study.cache.dto.ProductReviewDto;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -18,6 +18,7 @@ import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 
 @Configuration
@@ -49,20 +50,23 @@ public class RedisConfig {
     /**
      * @param connectionFactory - Redis 연결 Factory
      * @return Redis CacheManager
-     * @apiNote Redis CacheManager 설정
+     * @apiNote Redis CacheManager 설정, Kyro Serializer 사용(최적화)
      */
     @Primary
     @Bean(name = "redisCacheManager")
-    public CacheManager redisCacheManager(RedisConnectionFactory connectionFactory) {
+    public RedisCacheManager redisCacheManager(RedisConnectionFactory connectionFactory) {
+        KryoRedisSerializer<ArrayList> kryoRedisSerializer = new KryoRedisSerializer<>(ArrayList.class);
+
         RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(Duration.ofMinutes(60))
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
-                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()));
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(kryoRedisSerializer));
 
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(config)
                 .build();
     }
+
 
     /**
      * @param connectionFactory - Redis 연결 Factory

@@ -42,6 +42,9 @@ dependencies {
 	// Caffeine (Cache)
 	implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
 
+	// Kryo (Serialization)
+	implementation("com.esotericsoftware:kryo:5.6.2")
+
 	// Lombok
 	compileOnly("org.projectlombok:lombok")
 	annotationProcessor("org.projectlombok:lombok")

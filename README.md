@@ -5,127 +5,69 @@
 - Redis: 로컬 환경(localhost), 단일 인스턴스
 - DB: Postgres 로컬 환경
 
-```bash
-# 일반 조회
-hey -n 1000 -c 100 http://localhost:8100/api/posts/basic
-
-# Redis 캐싱 조회
-hey -n 1000 -c 100 http://localhost:8100/api/posts/redis
-
-# 인메모리 캐싱 조회
-hey -n 1000 -c 100 http://localhost:8100/api/posts/local
-```
-
-- 10000개의 요청을 100개의 동시 요청으로 보내는 테스트
+#### hey의 동작 방식 이해하기
+- 동시성 수준(-c)
+  - 동시에 실행될 작업자(worker)의 수를 지정합니다. 즉, 동시에 몇 개의 요청을 보낼지를 결정합니다.
+- 총 요청 수(-n) 
+  - 테스트 동안 보낼 총 요청의 수를 지정합니다.
+- 테스트 기간
+  - hey는 지정된 총 요청 수를 모든 작업자가 최대한 빠르게 처리할 때까지 테스트를 진행합니다. 테스트 시간은 고정되어 있지 않으며, 서버의 응답 시간과 처리 능력에 따라 달라집니다.
+  - 따라서, hey -n 1000 -c 100 명령을 실행하면, 100개의 동시 요청을 보내는 작업자들이 총 1000개의 요청을 최대한 빨리 처리합니다. 이때 테스트 기간은 서버의 성능에 따라 결정됩니다.
 
 ```bash
 # 일반 조회
-hey -n 10000 -c 100 http://localhost:8100/api/posts/basic
+hey -n 3000 -c 50 "http://localhost:8100/api/posts/basic?page=0&size=20"
 
-# Redis 캐싱 조회
-hey -n 10000 -c 100 http://localhost:8100/api/posts/redis
+# Redis 캐시 조회
+hey -n 3000 -c 50 "http://localhost:8100/api/posts/redis?page=0&size=20"
 
-# 인메모리 캐싱 조회
-hey -n 10000 -c 100 http://localhost:8100/api/posts/local
+# 로컬 캐시 조회
+hey -n 3000 -c 50 "http://localhost:8100/api/posts/local?page=0&size=20"
 ```
 
-## 1-1. 테스트 결과 (1000개의 요청일 경우)
-
-- M2 Max RAM 64GB로 테스트 진행
-- 1000개의 요청을 100개의 동시 요청으로 보냄
-
-일반 조회 (캐시 없음)
-
-- 총 실행 시간: 1.17초
-- 평균 응답 시간: 110.9ms
-- 초당 처리량: 854.28 req/s
-- 95% 응답 시간: 152.1ms
-
-Redis 캐시
-
-- 총 실행 시간: 1.19초
-- 평균 응답 시간: 114.1ms
-- 초당 처리량: 837.32 req/s
-- 95% 응답 시간: 128.4ms
-
-Caffeine 로컬 캐시
-
-- 총 실행 시간: 0.19초
-- 평균 응답 시간: 17.8ms
-- 초당 처리량: 5,119.41 req/s
-- 95% 응답 시간: 34.3ms
-
-## 1-2. 테스트 결과 (10000개의 요청일 경우)
-
+## 1-1. 테스트 결과
 - M2 Max RAM 64GB로 테스트 진행
 - 10000개의 요청을 100개의 동시 요청으로 보냄
 
 일반 조회 (캐시 없음)
+```bash
+Summary:
+Total:	3.3505 secs
+Slowest:	0.3340 secs
+Fastest:	0.0046 secs
+Average:	0.0548 secs
+Requests/sec:	895.3772
 
-- 총 실행 시간: 10.91초
-- 평균 응답 시간: 107.7ms
-- 초당 처리량: 916.52 req/s
-- 95% 응답 시간: 126.5ms
+Status
+[200]	3000 responses
+```
 
-Redis 캐시
+Redis 캐시 조회
+```bash
+Summary:
+Total:	2.6371 secs
+Slowest:	0.3268 secs
+Fastest:	0.0284 secs
+Average:	0.0436 secs
+Requests/sec:	1137.5926
 
-- 총 실행 시간: 11.90초
-- 평균 응답 시간: 118.5ms
-- 초당 처리량: 840.09 req/s
-- 95% 응답 시간: 129.1ms
+Status
+[200]	3000 responses
+```
+로컬 캐시 조회 (Caffeine)
+```bash
+Summary:
+Total:	0.6202 secs
+Slowest:	0.1816 secs
+Fastest:	0.0012 secs
+Average:	0.0090 secs
+Requests/sec:	4837.0970
 
-Caffeine 로컬 캐시
+Status
+[200]	3000 responses
+````
 
-- 총 실행 시간: 1.82초
-- 평균 응답 시간: 16.1ms
-- 초당 처리량: 5,484.82 req/s
-- 95% 응답 시간: 49.3ms
-
-## 1-3. 결론
-
-처리량(Throughput) 비교
-
-- Caffeine이 압도적으로 높은 처리량 (약 5,484 req/s)
-- 일반 조회가 Redis보다 약간 높은 처리량 (916 vs 840 req/s)
-
-응답 시간
-
-- Caffeine이 가장 빠른 응답 시간 (평균 16.1ms)
-- 일반 조회와 Redis는 비슷한 수준 (약 110ms대)
-
-안정성
-
-- 모든 방식이 95% 응답 시간이 200ms 이내로 안정적
-- Caffeine이 가장 안정적인 응답 시간 분포를 보임
-
-결론
-
-- 단일 서버 환경에서는 Caffeine이 압도적으로 좋은 성능
-- 현재 테스트 환경(작은 데이터/높은 동시성)에서 Redis는 단일 스레드 특성으로 인해 성능 제한
-- 로컬 캐시의 이점이 분명히 드러남
-
-## 1-4. Redis 성능 분석
-
-1. 현재 테스트의 특성
-
-- 작은 크기의 데이터를 대량으로 동시에 요청
-- 네트워크 오버헤드 발생
-- Redis의 단일 스레드 특성으로 인한 병목
-
-2. Redis가 유리한 상황
-
-- 대용량 단일 데이터 처리 (예: 큰 JSON 객체)
-- 낮은 동시성 요청
-- 분산 환경에서의 데이터 공유가 필요한 경우
-
-3. Redis 성능에 영향을 미치는 요소
-
-- 네트워크 지연 (로컬 환경이어도 발생)
-- 직렬화/역직렬화 오버헤드
-- Connection Pool 설정
-- Redis 서버 설정 (maxmemory, maxclients 등)
-
-## 2. 대용량 데이터 처리 테스트하기 (hey 사용)
+## 2. 대용량 + 복잡한 쿼리 데이터 처리 테스트 (hey 사용)
 
 - 테스트 데이터: 1000개의 게시글 (각 게시글 약 1MB 이상의 큰 크기)
 - 큰 사이즈의 데이터를 여러개 조회하는 시나리오
@@ -133,50 +75,76 @@ Caffeine 로컬 캐시
 - DB: Postgres 로컬 환경
 
 ```bash
+# 일반 조회
+hey -n 3000 -c 50 "http://localhost:8100/api/reviews/basic?page=0&size=20&minRating=0"
 
+# Redis 캐시 조회
+hey -n 3000 -c 50 "http://localhost:8100/api/reviews/redis?page=0&size=20&minRating=0"
+
+# 로컬 캐시 조회
+hey -n 3000 -c 50 "http://localhost:8100/api/reviews/local?page=0&size=20&minRating=0"
 ```
 
-## 3. 실제 사용시 고려사항
+## 2-1. 테스트 결과
+일반 조회 (캐시 없음)
+```bash
+Summary:
+Total:        35.9581 secs
+Slowest:      1.1375 secs
+Fastest:      0.1111 secs
+Average:      0.5942 secs
+Requests/sec: 83.4305
 
-Redis 사용이 유리한 경우
+Status code distribution:
+[200] 3000 responses
+```
+- 복잡한 쿼리와 대용량 데이터로 인해 데이터베이스 부하가 높습니다. 
+- 응답 시간이 길고, 요청 처리 속도가 느립니다. 
+- resp wait 시간이 길어 데이터베이스에서 결과를 받아오는 데 시간이 많이 소요됩니다.
 
-- 대용량 단일 데이터 처리
-- 분산 환경에서의 데이터 공유
-- 세션 저장소, 대규모 캐싱
+Redis 캐시 조회
+```bash
+Summary:
+Total:        0.2381 secs
+Slowest:      0.0130 secs
+Fastest:      0.0009 secs
+Average:      0.0039 secs
+Requests/sec: 12602.1276
 
-Caffeine 사용이 유리한 경우
+Status code distribution:
+[200] 3000 responses
+```
+- Redis 캐시를 사용하여 데이터베이스 접근 없이 메모리에서 데이터를 가져옵니다.
+- 응답 시간이 매우 빠르고, 요청 처리 속도가 높습니다.
+- resp wait 시간이 매우 짧아 캐시에서의 데이터 조회가 빠르게 이루어집니다.
 
-- 동시성이 높은 소규모 데이터 처리
-- 단일 서버 환경
-- 로컬 캐싱이 필요한 경우
+로컬 캐시 조회 (Caffeine)
+```bash
+Summary:
+Total:        0.0936 secs
+Slowest:      0.0055 secs
+Fastest:      0.0002 secs
+Average:      0.0015 secs
+Requests/sec: 32045.9469
 
-둘 다 사용하는 경우
+Status code distribution:
+[200] 3000 responses
+```
+- 로컬 캐시(Caffeine 등)를 사용하여 애플리케이션 메모리에서 데이터를 가져옵니다.
+- 응답 시간이 가장 빠르고, 요청 처리 속도가 높습니다.
+- Redis 캐시보다도 빠른 성능을 보입니다.
 
-- Redis: 분산 필요한 대용량 데이터
-- Caffeine: 자주 접근하는 소규모 데이터
+## 2-2. 동시성 수준 이해하기 (hey 요청 이해하기)
+1. 동시성 수준 50이란?
+- 동시성 수준 50은 한 번에 최대 50개의 요청이 동시에 처리된다는 것을 의미합니다. 
+- 즉, 애플리케이션 서버는 동시에 50명의 사용자로부터 오는 요청을 처리할 수 있어야 합니다.
 
-## 4. 성능 최적화 전략
+2. 총 3000개의 요청이란?
+- 총 3000개의 요청은 테스트 기간 동안 전체로 보낸 요청의 수입니다.
+- 이 요청들은 동시성 수준에 따라 분산되어 처리됩니다.
 
-1. 하이브리드 캐싱
-
-- 자주 접근하는 작은 데이터: Caffeine
-- 분산 필요/큰 데이터: Redis
-
-2. Redis 성능 최적화
-
-- Redis Cluster 사용
-- Pipeline 활용
-- 적절한 데이터 구조 선택
-
-3. 모니터링
-
-- 캐시 히트율
-- 응답 시간
-- 메모리 사용량
-
-4. 캐시 전략 최적화
-
-- 적절한 TTL 설정
-- 캐시 갱신 정책 (Write-through/Write-behind)
-- 캐시 제거 정책 (LRU/LFU)
-- 캐시 예열 (Cache Warming)
+3. 테스트 기간과 요청 속도 계산 (예시를 든 설명)
+- 테스트 총 소요 시간을 약 12.9초라고 가정합시다.
+- 평균 초당 요청 수(Requests/sec)는 약 232개로 가정합니다. 
+- 계산: 3000 요청 / 12.9초 ≈ 232 요청/초 
+- 이는 테스트 기간 동안 매 초당 평균 232개의 요청이 처리되었다는 의미입니다.

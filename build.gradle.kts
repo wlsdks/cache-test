@@ -24,12 +24,23 @@ repositories {
 }
 
 dependencies {
-	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-	implementation("org.springframework.boot:spring-boot-starter-data-redis")
+	// Spring Boot
 	implementation("org.springframework.boot:spring-boot-starter-web")
-	compileOnly("org.projectlombok:lombok")
+
+	// JPA
+	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+
+	// PostgreSQL
 	runtimeOnly("org.postgresql:postgresql")
+
+	// Redis
+	implementation("org.springframework.boot:spring-boot-starter-data-redis")
+
+	// Lombok
+	compileOnly("org.projectlombok:lombok")
 	annotationProcessor("org.projectlombok:lombok")
+
+	// Test
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }

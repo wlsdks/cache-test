@@ -5,6 +5,7 @@ import com.study.cache.repository.ProductReviewRepository;
 import com.study.cache.service.ProductReviewService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,12 +21,14 @@ public class RedisProductReviewService implements ProductReviewService {
 
     private final ProductReviewRepository reviewRepository;
     private final RedisTemplate<String, List<ProductReviewDto>> redisTemplate;
-    private static final String CACHE_KEY = "product_reviews::all";
 
-    @Transactional(readOnly = true)
     @Override
-    public List<ProductReviewDto> getReviews() {
-        List<ProductReviewDto> cachedReviews = redisTemplate.opsForValue().get(CACHE_KEY);
+    @Transactional(readOnly = true)
+    public List<ProductReviewDto> getReviews(int page, int size) {
+        String cacheKey = "product_reviews::page:" + page + "::size:" + size;
+
+        @SuppressWarnings("unchecked")
+        List<ProductReviewDto> cachedReviews = redisTemplate.opsForValue().get(cacheKey);
 
         if (cachedReviews != null) {
             log.info("Cache hit!");
@@ -33,11 +36,13 @@ public class RedisProductReviewService implements ProductReviewService {
         }
 
         log.info("Cache miss! Fetching from database...");
-        List<ProductReviewDto> reviews = reviewRepository.findAll().stream()
+        PageRequest pageRequest = PageRequest.of(page, size);
+        List<ProductReviewDto> reviews = reviewRepository.findAll(pageRequest).getContent()
+                .stream()
                 .map(ProductReviewDto::from)
                 .collect(Collectors.toList());
 
-        redisTemplate.opsForValue().set(CACHE_KEY, reviews, Duration.ofMinutes(30));
+        redisTemplate.opsForValue().set(cacheKey, reviews, Duration.ofMinutes(30));
 
         return reviews;
     }

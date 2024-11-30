@@ -9,6 +9,7 @@ import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -22,36 +23,30 @@ public class ProductReviewController {
     private final RedisProductReviewService redisReviewService;
     private final LocalCacheProductReviewService localCacheReviewService;
 
-    /**
-     * 캐시를 사용하지 않는 기본적인 방법으로 전체 리뷰를 조회합니다.
-     *
-     * @return 전체 리뷰 목록
-     */
     @GetMapping("/basic")
-    public ResponseEntity<List<ProductReviewDto>> getReviewsWithoutCache() {
+    public ResponseEntity<List<ProductReviewDto>> getReviewsWithoutCache(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
         return ResponseEntity.ok()
                 .cacheControl(CacheControl.noCache())
-                .body(basicReviewService.getReviews());
+                .body(basicReviewService.getReviews(page, size));
     }
 
-    /**
-     * Redis 캐시를 사용하여 전체 리뷰를 조회합니다.
-     *
-     * @return 전체 리뷰 목록
-     */
     @GetMapping("/redis")
-    public ResponseEntity<List<ProductReviewDto>> getReviewsWithRedisCache() {
-        return ResponseEntity.ok(redisReviewService.getReviews());
+    public ResponseEntity<List<ProductReviewDto>> getReviewsWithRedisCache(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        return ResponseEntity.ok(redisReviewService.getReviews(page, size));
     }
 
-    /**
-     * Local 캐시를 (CacheManager: Caffeine) 사용하여 전체 리뷰를 조회합니다.
-     *
-     * @return 전체 리뷰 목록
-     */
     @GetMapping("/local")
-    public ResponseEntity<List<ProductReviewDto>> getReviewsWithLocalCache() {
-        return ResponseEntity.ok(localCacheReviewService.getReviews());
+    public ResponseEntity<List<ProductReviewDto>> getReviewsWithLocalCache(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        return ResponseEntity.ok(localCacheReviewService.getReviews(page, size));
     }
 
 }

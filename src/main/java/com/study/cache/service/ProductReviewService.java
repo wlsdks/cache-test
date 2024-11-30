@@ -6,6 +6,6 @@ import java.util.List;
 
 public interface ProductReviewService {
 
-    List<ProductReviewDto> getReviews();
+    List<ProductReviewDto> getReviews(int page, int size);  // 메서드 수정
 
 }

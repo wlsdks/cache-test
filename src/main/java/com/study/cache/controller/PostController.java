@@ -9,6 +9,7 @@ import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -18,52 +19,58 @@ import java.util.List;
 @RestController
 public class PostController {
 
-    // 인터페이스를 주입받아서 사용할수도 있지만 이 경우에는 각자 테스트를 위해 바로 구현체를 주입받았습니다.
     private final BasicPostService basicPostService;
     private final RedisPostService redisPostService;
     private final LocalCachePostService localCachePostService;
 
     /**
-     * 캐시를 사용하지 않는 기본적인 방법으로 전체 게시글을 조회합니다.
+     * 캐시를 사용하지 않는 기본적인 방법으로 게시글을 조회합니다.
      *
-     * @return 전체 게시글 목록
+     * @param page 페이지 번호 (0부터 시작)
+     * @param size 페이지 당 게시글 수 (기본값: 20)
+     * @return 게시글 목록
      */
     @GetMapping("/basic")
-    public ResponseEntity<List<PostDto>> getPostsWithoutCache() {
+    public ResponseEntity<List<PostDto>> getPostsWithoutCache(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        List<PostDto> posts = basicPostService.getPosts(page, size);
         return ResponseEntity.ok()
                 .cacheControl(CacheControl.noCache())
-                .body(basicPostService.getPosts());
+                .body(posts);
     }
 
     /**
-     * Redis 캐시를 사용하여 전체 게시글을 조회합니다.
+     * Redis 캐시를 사용하여 게시글을 조회합니다.
      *
-     * @return 전체 게시글 목록
+     * @param page 페이지 번호 (0부터 시작)
+     * @param size 페이지 당 게시글 수 (기본값: 20)
+     * @return 게시글 목록
      */
     @GetMapping("/redis")
-    public ResponseEntity<List<PostDto>> getPostsWithRedisCache() {
-        return ResponseEntity.ok(redisPostService.getPosts());
+    public ResponseEntity<List<PostDto>> getPostsWithRedisCache(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        List<PostDto> posts = redisPostService.getPosts(page, size);
+        return ResponseEntity.ok(posts);
     }
 
     /**
-     * Local 캐시를 (CacheManager: Caffeine) 사용하여 전체 게시글을 조회합니다.
+     * Local 캐시를 사용하여 게시글을 조회합니다.
      *
-     * @return 전체 게시글 목록
+     * @param page 페이지 번호 (0부터 시작)
+     * @param size 페이지 당 게시글 수 (기본값: 20)
+     * @return 게시글 목록
      */
     @GetMapping("/local")
-    public ResponseEntity<List<PostDto>> getPostsWithLocalCache() {
-        return ResponseEntity.ok(localCachePostService.getPosts());
+    public ResponseEntity<List<PostDto>> getPostsWithLocalCache(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        List<PostDto> posts = localCachePostService.getPosts(page, size);
+        return ResponseEntity.ok(posts);
     }
-
-//    /**
-//     * 게시글을 생성합니다.
-//     *
-//     * @param postDto - 게시글 정보
-//     * @return 생성된 게시글 정보
-//     */
-//    @PostMapping
-//    public ResponseEntity<PostDto> createPost(@RequestBody PostDto postDto) {
-//        return ResponseEntity.ok(basicPostService.createPost(postDto));
-//    }
 
 }

@@ -6,6 +6,6 @@ import java.util.List;
 
 public interface PostService {
 
-    List<PostDto> getPosts();
+    List<PostDto> getPosts(int page, int size);
 
 }

@@ -17,10 +17,11 @@ public class LocalCachePostService implements PostService {
 
     private final PostRepository postRepository;
 
-    @Cacheable(value = "posts", key = "'all'", cacheManager = "caffeineCacheManager")
+    @Cacheable(value = "posts", key = "'page_' + #page + '_size_' + #size", cacheManager = "caffeineCacheManager")
     @Override
-    public List<PostDto> getPosts() {
-        List<PostEntity> posts = postRepository.findAll();
+    public List<PostDto> getPosts(int page, int size) {
+        int offset = page * size;
+        List<PostEntity> posts = postRepository.findAllByOffsetAndLimit(offset, size);
 
         return posts.stream()
                 .map(PostDto::from)

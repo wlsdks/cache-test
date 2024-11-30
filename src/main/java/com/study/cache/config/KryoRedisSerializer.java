@@ -3,7 +3,9 @@ package com.study.cache.config;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
+import com.study.cache.dto.PostDto;
 import com.study.cache.dto.ProductReviewDto;
+import com.study.cache.entity.PostEntity;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.SerializationException;
 
@@ -38,8 +40,10 @@ public class KryoRedisSerializer<T> implements RedisSerializer<T> {
             kryo.register(Integer.class, 106);
             kryo.register(Long.class, 107);
             kryo.register(String.class, 108);
+            kryo.register(PostDto.class, 115);
+            kryo.register(PostEntity.class, 116);
             // 필요한 다른 클래스들도 고유한 ID로 등록
-            // kryo.register(YourCustomClass.class, 109);
+            // kryo.register(YourCustomClass.class, 116);
 
             return kryo;
         });
